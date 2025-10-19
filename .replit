@@ -1,0 +1,24 @@
+# .replit
+language = "python3"
+run = "python main.py"
+
+[nix]
+channel = "stable-22_11"
+
+[env]
+VIRTUAL_ENV = "/home/runner/${REPL_SLUG}/venv"
+REPLIT_DISABLE_IPYTHON = "1"
+
+[packager]
+language = "python3"
+
+[packager.features]
+packageSearch = true
+guessImports = true
+enabledForHosting = false
+
+[unitTest]
+language = "python3"
+
+[languages.python3.languageServer]
+start = "pyls"
