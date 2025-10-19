@@ -1,83 +1,106 @@
 #!/usr/bin/env python3
 """
-ملف التشغيل الرئيسي المعدل لـ Replit
+ملف التشغيل الرئيسي النهائي لـ Replit
 """
 
-import os
-import sys
 import asyncio
-import logging
+import sys
+import os
 from pathlib import Path
 
-# إعداد المسارات
+# إعداد مسارات الاستيراد
 BASE_DIR = Path(__file__).parent
 sys.path.append(str(BASE_DIR))
 
-# إعداد التسجيل
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+from core.replit_engine import QuantumReplitEngine
+from utils.replit_helper import ReplitEnvironment
 
-class ReplitQuantumOSINT:
-    def __init__(self):
-        self.base_dir = BASE_DIR
-        self.setup_directories()
-        
-    def setup_directories(self):
-        """إنشاء الدلائل المطلوبة"""
-        directories = ['core', 'plugins', 'ai', 'utils', 'config', 'storage']
-        for dir_name in directories:
-            dir_path = self.base_dir / dir_name
-            dir_path.mkdir(exist_ok=True)
-            # إنشاء ملف __init__.py في كل مجلد
-            init_file = dir_path / "__init__.py"
-            init_file.touch(exist_ok=True)
+async def main():
+    """الدالة الرئيسية المحسنة"""
     
-    async def setup_environment(self):
-        """إعداد البيئة على Replit"""
-        logger.info("🔧 إعداد بيئة Replit...")
+    # إعداد البيئة
+    env = ReplitEnvironment()
+    
+    # عرض الشعار
+    display_welcome_banner()
+    
+    try:
+        # إنشاء وتهيئة المحرك
+        engine = QuantumReplitEngine()
         
-        # التحقق من المتطلبات
-        try:
-            import undetected_chromedriver as uc
-            logger.info("✅ undetected_chromedriver مثبت")
-        except ImportError:
-            logger.warning("❌ undetected_chromedriver غير مثبت")
+        print("\n🔍 نظام QuantumOSINT جاهز للتشغيل على Replit!")
+        print("=" * 50)
+        
+        # عرض قائمة الأوامر
+        while True:
+            print("\n📋 قائمة الأوامر المتاحة:")
+            print("1. 🔍 مسح أهداف")
+            print("2. 📊 عرض الإحصائيات")
+            print("3. ⚙️  إعدادات النظام")
+            print("4. 🚪 خروج")
             
-        try:
-            import selenium
-            logger.info("✅ selenium مثبت")
-        except ImportError:
-            logger.warning("❌ selenium غير مثبت")
+            choice = input("\nاختر رقم الأمر: ").strip()
+            
+            if choice == "1":
+                await run_scan(engine)
+            elif choice == "2":
+                await show_stats(engine)
+            elif choice == "3":
+                show_settings()
+            elif choice == "4":
+                print("👋 مع السلامة!")
+                break
+            else:
+                print("❌ اختيار غير صحيح")
+                
+    except Exception as e:
+        print(f"❌ خطأ في النظام: {e}")
+        return 1
     
-    async def demo_scan(self):
-        """مسح تجريبي لعرض إمكانيات النظام"""
-        logger.info("🎯 بدء المسح التجريبي...")
-        
-        # بيانات تجريبية
-        demo_results = {
-            'status': 'success',
-            'targets_processed': 3,
-            'data_collected': {
-                'profiles_found': 5,
-                'hidden_contacts': 12,
-                'network_connections': 8
-            },
-            'analysis': {
-                'sentiment_analysis': 'completed',
-                'network_mapping': 'completed',
-                'threat_assessment': 'low_risk'
-            }
-        }
-        
-        return demo_results
+    return 0
+
+async def run_scan(engine):
+    """تشغيل مسح للأهداف"""
+    print("\n🎯 إدخال الأهداف للمسح")
+    print("ملاحظة: أدخل الأهداف مفصولة بفاصلة")
     
-    def display_banner(self):
-        """عرض شعار النظام"""
-        banner = """
-        
+    targets_input = input("الأهداف: ").strip()
+    
+    if not targets_input:
+        print("❌ لم تدخل أي أهداف")
+        return
+    
+    targets = [t.strip() for t in targets_input.split(',')]
+    
+    print(f"\n🚀 بدء المسح لـ {len(targets)} هدف...")
+    
+    results = await engine.comprehensive_scan(targets)
+    
+    if 'error' in results:
+        print(f"❌ فشل المسح: {results['error']}")
+    else:
+        print(f"✅ اكتمل المسح بنجاح!")
+        print(f"📊 النتائج: {results['summary']}")
+
+async def show_stats(engine):
+    """عرض إحصائيات النظام"""
+    stats = engine.environment.check_resources()
+    print("\n📈 إحصائيات النظام:")
+    for key, value in stats.items():
+        print(f"   {key}: {value}")
+
+def show_settings():
+    """عرض إعدادات النظام"""
+    from config.settings import settings
+    print("\n⚙️  إعدادات النظام:")
+    print(f"   الإصدار: {settings.VERSION}")
+    print(f"   بيئة Replit: {settings.IS_REPLIT}")
+    print(f"   طلبات متزامنة: {settings.MAX_CONCURRENT_REQUESTS}")
+
+def display_welcome_banner():
+    """عرض شعار الترحيب"""
+    banner = r"""
+    
   ██████  ██    ██  █████  ███    ██ ████████ ██    ██ ██   ██      ██████  ███████ ███    ██ ██ ████████ 
  ██       ██    ██ ██   ██ ████   ██    ██    ██    ██ ██  ██      ██    ██ ██      ████   ██ ██    ██    
  ██   ███ ██    ██ ███████ ██ ██  ██    ██    ██    ██ █████       ██    ██ █████   ██ ██  ██ ██    ██    
@@ -86,47 +109,13 @@ class ReplitQuantumOSINT:
  
         🤖 نظام OSINT المتقدم | الإصدار الكمي | تشغيل على Replit
         👨‍💻 المطور: أبو جمال عبد الناصر الشوكي
+        📧 abujamalhack@mail2tor.com
         🌐 https://github.com/AbuJamilAlShawki/QuantumOSINT
         
-        """
-        print(banner)
-
-async def main():
-    """الدالة الرئيسية"""
-    # إنشاء كائن النظام
-    system = ReplitQuantumOSINT()
-    system.display_banner()
-    
-    try:
-        # إعداد البيئة
-        await system.setup_environment()
-        
-        # تشغيل المسح التجريبي
-        print("\n🚀 بدء تشغيل النظام...")
-        results = await system.demo_scan()
-        
-        # عرض النتائج
-        print("\n📊 نتائج المسح التجريبي:")
-        print(f"✅ الحالة: {results['status']}")
-        print(f"🎯 الأهداف المعالجة: {results['targets_processed']}")
-        print(f"📈 الملفات الشخصية المكتشفة: {results['data_collected']['profiles_found']}")
-        print(f"📞 جهات الاتصال المخفية: {results['data_collected']['hidden_contacts']}")
-        print(f"🕸️  اتصالات الشبكة: {results['data_collected']['network_connections']}")
-        
-        print("\n🧠 التحليلات المنجزة:")
-        for analysis, status in results['analysis'].items():
-            print(f"   • {analysis}: {status}")
-            
-        print("\n🎉 النظام جاهز للعمل على Replit!")
-        print("💡 يمكنك الآن تطوير النظام وإضافة المزيد من الميزات")
-        
-    except Exception as e:
-        logger.error(f"❌ فشل التشغيل: {e}")
-        return 1
-    
-    return 0
+    """
+    print(banner)
 
 if __name__ == "__main__":
-    # تشغيل النظام
+    # تشغيل التطبيق
     exit_code = asyncio.run(main())
     exit(exit_code)
