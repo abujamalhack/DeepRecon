@@ -1,12 +1,15 @@
 # .replit
 language = "python3"
 run = "python main.py"
+entrypoint = "main.py"
 
 [nix]
 channel = "stable-22_11"
 
 [env]
 VIRTUAL_ENV = "/home/runner/${REPL_SLUG}/venv"
+PATH = "${VIRTUAL_ENV}/bin:/home/runner/${REPL_SLUG}/.local/bin"
+PYTHONPATH = "./"
 REPLIT_DISABLE_IPYTHON = "1"
 
 [packager]
@@ -20,5 +23,13 @@ enabledForHosting = false
 [unitTest]
 language = "python3"
 
-[languages.python3.languageServer]
-start = "pyls"
+[debugger]
+support = true
+transport = "localhost:0"
+
+[git]
+enable = true
+
+[deployment]
+run = ["python", "main.py"]
+build = ["pip", "install", "-r", "requirements.txt"]
