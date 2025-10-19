@@ -1,32 +1,86 @@
 #!/usr/bin/env python3
 """
-أدوات مساعدة للتشغيل على Replit
+أدوات مساعدة إضافية
 """
 
-import re
 import json
-from typing import Any, Dict
+import csv
+import logging
+from pathlib import Path
+from datetime import datetime
+from typing import Dict, Any, List
 
-class ReplitHelpers:
-    @staticmethod
-    def validate_email(email: str) -> bool:
-        """التحقق من صحة الإيميل"""
-        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        return bool(re.match(pattern, email))
+class DataSaver:
+    """حفظ البيانات بأنواع مختلفة"""
     
-    @staticmethod
-    def validate_phone(phone: str) -> bool:
-        """التحقق من صحة الهاتف"""
-        cleaned = re.sub(r'\D', '', phone)
-        return len(cleaned) >= 10
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        self.base_dir = Path(__file__).parent.parent
     
-    @staticmethod
-    def save_results(results: Dict[str, Any], filename: str = "results.json"):
-        """حفظ النتائج في ملف"""
+    async def save_json(self, data: Dict, filename: str) -> str:
+        """حفظ البيانات كـ JSON"""
         try:
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(results, f, indent=2, ensure_ascii=False)
-            return True
+            exports_dir = self.base_dir / 'exports'
+            exports_dir.mkdir(exist_ok=True)
+            
+            file_path = exports_dir / f"{filename}_{int(datetime.now().timestamp())}.json"
+            
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            
+            self.logger.info(f"💾 تم حفظ JSON: {file_path}")
+            return str(file_path)
+            
         except Exception as e:
-            print(f"فشل حفظ النتائج: {e}")
-            return False
+            self.logger.error(f"❌ فشل حفظ JSON: {e}")
+            return ""
+    
+    async def save_csv(self, data: List[Dict], filename: str) -> str:
+        """حفظ البيانات كـ CSV"""
+        try:
+            if not data:
+                return ""
+            
+            exports_dir = self.base_dir / 'exports'
+            exports_dir.mkdir(exist_ok=True)
+            
+            file_path = exports_dir / f"{filename}_{int(datetime.now().timestamp())}.csv"
+            
+            # استخراج العناوين
+            fieldnames = data[0].keys()
+            
+            with open(file_path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(data)
+            
+            self.logger.info(f"💾 تم حفظ CSV: {file_path}")
+            return str(file_path)
+            
+        except Exception as e:
+            self.logger.error(f"❌ فشل حفظ CSV: {e}")
+            return ""
+
+class PerformanceMonitor:
+    """مراقب أداء النظام"""
+    
+    def __init__(self):
+        self.start_time = datetime.now()
+        self.operations_count = 0
+    
+    def start_operation(self):
+        """بدء عملية جديدة"""
+        self.operations_count += 1
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """الحصول على إحصائيات الأداء"""
+        current_time = datetime.now()
+        elapsed = (current_time - self.start_time).total_seconds()
+        
+        return {
+            'operations_count': self.operations_count,
+            'elapsed_seconds': elapsed,
+            'operations_per_second': self.operations_count / elapsed if elapsed > 0 else 0,
+            'start_time': self.start_time.isoformat(),
+            'current_time': current_time.isoformat()
+            }
